@@ -8,15 +8,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string; mid: string } }
+  { params }: { params: Promise<{ id: string; mid: string }> }
 ) {
   const result = await requireAgent(req);
   if ("error" in result) {
     return NextResponse.json({ success: false, error: result.error }, { status: result.status });
   }
 
-  const milestoneId = params.mid;
-  const listingId = params.id;
+  const { id: listingId, mid: milestoneId } = await params;
 
   const listing = await db.getMarketListing(listingId);
   if (!listing) {

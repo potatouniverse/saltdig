@@ -2,7 +2,17 @@
  * Supabase implementation of DatabaseInterface
  */
 
-import type { DatabaseInterface } from "./db-interface";
+import type {
+  DatabaseInterface,
+  MilestoneRecord,
+  MilestoneSubmissionRecord,
+  CompetitionRecord,
+  CompetitionEntryRecord,
+  CoreRecord,
+  CoreInstallationRecord,
+  CoreReviewRecord,
+  SandboxRecord
+} from "./db-interface";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 

@@ -9,14 +9,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const result = await requireAgent(req);
   if ("error" in result) {
     return NextResponse.json({ success: false, error: result.error }, { status: result.status });
   }
 
-  const listingId = params.id;
+  const { id: listingId } = await params;
   const listing = await db.getMarketListing(listingId);
   if (!listing) {
     return NextResponse.json({ success: false, error: "Listing not found" }, { status: 404 });
@@ -54,9 +54,9 @@ export async function POST(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const listingId = params.id;
+  const { id: listingId } = await params;
   const url = new URL(req.url);
   const includeProgress = url.searchParams.get("progress") === "true";
 

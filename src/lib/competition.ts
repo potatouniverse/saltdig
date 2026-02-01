@@ -4,6 +4,7 @@
  */
 
 import { db } from './db-factory';
+import type { CompetitionRecord, CompetitionEntryRecord } from './db-interface';
 
 export type EvaluationMethod = 'harness' | 'manual' | 'vote';
 export type PrizeDistributionType = 'winner-take-all' | 'top-3' | 'proportional';
@@ -72,7 +73,7 @@ export interface EvaluationResult {
 export async function createCompetition(
   listingId: string,
   config: CompetitionConfig
-): Promise<Competition> {
+): Promise<CompetitionRecord> {
   // Verify listing exists and is a bounty
   const listing = await db.getMarketListing(listingId);
   if (!listing) {
@@ -98,11 +99,11 @@ export async function createCompetition(
   }
 
   return await db.createCompetition({
-    listingId,
-    maxSubmissions: config.maxSubmissions || 1,
-    evaluationMethod: config.evaluationMethod,
-    prizeDistribution: config.prizeDistribution.type,
-    prizeConfig,
+    listing_id: listingId,
+    max_submissions: config.maxSubmissions || 1,
+    evaluation_method: config.evaluationMethod,
+    prize_distribution: config.prizeDistribution.type,
+    prize_config: prizeConfig,
     deadline: config.deadline ? config.deadline.toISOString() : null,
   });
 }
@@ -114,7 +115,7 @@ export async function submitEntry(
   competitionId: string,
   agentId: string,
   artifacts: any
-): Promise<CompetitionEntry> {
+): Promise<CompetitionEntryRecord> {
   const competition = await db.getCompetitionById(competitionId);
   if (!competition) {
     throw new Error('Competition not found');
@@ -131,21 +132,21 @@ export async function submitEntry(
 
   // Check if agent already has a submission
   const existingEntries = await db.getCompetitionEntriesByAgent(competitionId, agentId);
-  if (existingEntries.length >= competition.maxSubmissions) {
-    throw new Error(`Maximum ${competition.maxSubmissions} submission(s) per agent`);
+  if (existingEntries.length >= competition.max_submissions) {
+    throw new Error(`Maximum ${competition.max_submissions} submission(s) per agent`);
   }
 
   return await db.createCompetitionEntry({
-    competitionId,
-    agentId,
-    artifactsJson: artifacts,
+    competition_id: competitionId,
+    agent_id: agentId,
+    artifacts_json: artifacts,
   });
 }
 
 /**
  * List all entries for a competition
  */
-export async function listEntries(competitionId: string): Promise<CompetitionEntry[]> {
+export async function listEntries(competitionId: string): Promise<CompetitionEntryRecord[]> {
   return await db.getCompetitionEntries(competitionId);
 }
 
@@ -162,7 +163,7 @@ export async function evaluateEntry(
     throw new Error('Entry not found');
   }
 
-  const competition = await db.getCompetitionById(entry.competitionId);
+  const competition = await db.getCompetitionById(entry.competition_id);
   if (!competition) {
     throw new Error('Competition not found');
   }
@@ -176,11 +177,11 @@ export async function evaluateEntry(
   try {
     if (evaluator) {
       // Use provided evaluator function
-      result = await evaluator(entry.artifactsJson);
-    } else if (competition.evaluationMethod === 'harness') {
+      result = await evaluator(entry.artifacts_json);
+    } else if (competition.evaluation_method === 'harness') {
       // Run acceptance harness (would integrate with existing harness system)
-      result = await runAcceptanceHarness(entry.artifactsJson, competition.listingId);
-    } else if (competition.evaluationMethod === 'manual') {
+      result = await runAcceptanceHarness(entry.artifacts_json, competition.listing_id);
+    } else if (competition.evaluation_method === 'manual') {
       // Manual evaluation - just mark as scored with null score for now
       result = {
         success: true,
@@ -188,7 +189,7 @@ export async function evaluateEntry(
         details: { message: 'Awaiting manual evaluation' },
       };
     } else {
-      throw new Error(`Unsupported evaluation method: ${competition.evaluationMethod}`);
+      throw new Error(`Unsupported evaluation method: ${competition.evaluation_method}`);
     }
 
     await db.updateCompetitionEntry(entryId, {
@@ -216,7 +217,7 @@ export async function evaluateEntry(
  * Finalize competition - determine winners and distribute prizes
  */
 export async function finalizeCompetition(competitionId: string): Promise<{
-  winners: CompetitionEntry[];
+  winners: CompetitionEntryRecord[];
   totalPrize: number;
   distribution: { [agentId: string]: number };
 }> {
@@ -229,7 +230,7 @@ export async function finalizeCompetition(competitionId: string): Promise<{
     throw new Error('Competition already finalized');
   }
 
-  const listing = await db.getMarketListing(competition.listingId);
+  const listing = await db.getMarketListing(competition.listing_id);
   if (!listing) {
     throw new Error('Listing not found');
   }
@@ -246,16 +247,16 @@ export async function finalizeCompetition(competitionId: string): Promise<{
 
   // Calculate prize distribution
   const totalPrize = listing.currency === 'usdc' 
-    ? (listing.usdcAmount || 0) 
+    ? (listing.usdc_amount || 0) 
     : parseFloat(listing.price);
 
   const distribution: { [agentId: string]: number } = {};
-  const winners: CompetitionEntry[] = [];
+  const winners: CompetitionEntryRecord[] = [];
 
-  if (competition.prizeDistribution === 'winner-take-all') {
+  if (competition.prize_distribution === 'winner-take-all') {
     // Winner takes all
     const winner = scoredEntries[0];
-    distribution[winner.agentId] = totalPrize;
+    distribution[winner.agent_id] = totalPrize;
     winners.push(winner);
     
     await db.updateCompetitionEntry(winner.id, {
@@ -263,9 +264,9 @@ export async function finalizeCompetition(competitionId: string): Promise<{
       rank: 1,
       prizeAmount: totalPrize,
     });
-  } else if (competition.prizeDistribution === 'top-3') {
+  } else if (competition.prize_distribution === 'top-3') {
     // Top 3 split
-    const config = competition.prizeConfig || {};
+    const config = competition.prize_config || {};
     const percentages = [
       config.firstPlace || 50,
       config.secondPlace || 30,
@@ -275,7 +276,7 @@ export async function finalizeCompetition(competitionId: string): Promise<{
     for (let i = 0; i < Math.min(3, scoredEntries.length); i++) {
       const entry = scoredEntries[i];
       const prize = (totalPrize * percentages[i]) / 100;
-      distribution[entry.agentId] = prize;
+      distribution[entry.agent_id] = prize;
       winners.push(entry);
 
       await db.updateCompetitionEntry(entry.id, {
@@ -284,9 +285,9 @@ export async function finalizeCompetition(competitionId: string): Promise<{
         prizeAmount: prize,
       });
     }
-  } else if (competition.prizeDistribution === 'proportional') {
+  } else if (competition.prize_distribution === 'proportional') {
     // Proportional to score (above threshold)
-    const minScore = competition.prizeConfig?.minScore || 0;
+    const minScore = competition.prize_config?.minScore || 0;
     const qualifiedEntries = scoredEntries.filter(e => (e.score || 0) >= minScore);
     
     if (qualifiedEntries.length === 0) {
@@ -298,7 +299,7 @@ export async function finalizeCompetition(competitionId: string): Promise<{
     for (let i = 0; i < qualifiedEntries.length; i++) {
       const entry = qualifiedEntries[i];
       const prize = (totalPrize * (entry.score || 0)) / totalScore;
-      distribution[entry.agentId] = prize;
+      distribution[entry.agent_id] = prize;
       if (i === 0) winners.push(entry);
 
       await db.updateCompetitionEntry(entry.id, {
@@ -312,13 +313,13 @@ export async function finalizeCompetition(competitionId: string): Promise<{
   // Update competition status
   await db.updateCompetition(competitionId, {
     status: 'finalized',
-    winnerId: winners[0]?.agentId || null,
+    winnerId: winners[0]?.agent_id || null,
     finalizedAt: new Date().toISOString(),
   });
 
   // Distribute prizes (integrate with existing payment system)
   for (const [agentId, amount] of Object.entries(distribution)) {
-    await distributePrize(agentId, amount, listing.currency, competition.listingId);
+    await distributePrize(agentId, amount, listing.currency, competition.listing_id);
   }
 
   return { winners, totalPrize, distribution };
@@ -327,7 +328,7 @@ export async function finalizeCompetition(competitionId: string): Promise<{
 /**
  * Get competition leaderboard (ranked submissions)
  */
-export async function getLeaderboard(competitionId: string): Promise<CompetitionEntry[]> {
+export async function getLeaderboard(competitionId: string): Promise<CompetitionEntryRecord[]> {
   const entries = await db.getCompetitionEntries(competitionId);
   
   return entries

@@ -4,6 +4,7 @@
  */
 
 import { db } from "./db-factory";
+import type { CoreRecord } from "./db-interface";
 
 // ============================================================================
 // TypeScript Interfaces
@@ -60,7 +61,7 @@ export interface CoreInstallation {
 }
 
 export interface CoreMatch {
-  core: CoreManifest;
+  core: CoreRecord;
   confidence: number; // 0-1 match score
   provides_matched: string[]; // which capabilities match the need
   missing_deps: string[]; // unresolved dependencies
@@ -100,7 +101,7 @@ export interface CoreSearchFilters {
 export async function publishCore(
   agentId: string,
   manifest: Omit<CoreManifest, 'id' | 'author_id' | 'author_name' | 'install_count' | 'avg_rating' | 'created_at' | 'updated_at'>
-): Promise<CoreManifest> {
+): Promise<CoreRecord> {
   // Validate agent exists
   const agent = await db.getAgentById(agentId);
   if (!agent) {
@@ -141,7 +142,7 @@ export async function publishCore(
 export async function searchCores(
   query?: string,
   filters?: CoreSearchFilters
-): Promise<CoreManifest[]> {
+): Promise<CoreRecord[]> {
   return await db.searchCores({
     query,
     category: filters?.category,
@@ -159,7 +160,7 @@ export async function searchCores(
  * Get full core details with reviews and stats
  */
 export async function getCoreDetail(coreId: string): Promise<{
-  core: CoreManifest;
+  core: CoreRecord;
   reviews: CoreReview[];
   stats: {
     install_count: number;
@@ -213,7 +214,7 @@ export async function installCore(
   }
 
   // Validate config against schema
-  if (config && core.config_schema) {
+  if (config && core.manifest_json?.config_schema) {
     // TODO: JSON Schema validation
   }
 
@@ -233,11 +234,11 @@ export async function installCore(
 export async function resolveCoreDeps(
   coreIds: string[]
 ): Promise<{
-  resolved: CoreManifest[];
+  resolved: CoreRecord[];
   missing: string[];
   conflicts: { core: string; reason: string }[];
 }> {
-  const resolved: CoreManifest[] = [];
+  const resolved: CoreRecord[] = [];
   const missing: string[] = [];
   const conflicts: { core: string; reason: string }[] = [];
   const visited = new Set<string>();
@@ -309,12 +310,12 @@ export async function matchCoresForProject(
     const nodeMatches: CoreMatch[] = cores.map((core) => {
       // Calculate confidence score
       const providesMatched = node.needs.filter((need) =>
-        core.provides.some((p) => p.toLowerCase().includes(need.toLowerCase()))
+        core.provides?.some((p) => p.toLowerCase().includes(need.toLowerCase()))
       );
       const confidence = providesMatched.length / node.needs.length;
 
       // Check for missing dependencies
-      const missingDeps = core.requires.filter(
+      const missingDeps = (core.requires || []).filter(
         (req) => !projectGraph.nodes.some((n) => n.provides?.includes(req))
       );
 
@@ -450,7 +451,7 @@ export async function rateAndReviewCore(
 /**
  * Get all installed cores for a project
  */
-export async function getProjectCores(projectId: string): Promise<CoreManifest[]> {
+export async function getProjectCores(projectId: string): Promise<CoreRecord[]> {
   return await db.getProjectCores(projectId);
 }
 
@@ -475,6 +476,6 @@ export async function uninstallCore(
 export async function getCoresByAuthor(
   authorId: string,
   limit: number = 50
-): Promise<CoreManifest[]> {
+): Promise<CoreRecord[]> {
   return await db.getCoresByAuthor(authorId, limit);
 }

@@ -2,6 +2,7 @@
  * Milestone Management — Upwork-style partial escrow releases
  */
 import { db } from "./db-factory";
+import type { MilestoneRecord, MilestoneSubmissionRecord } from "./db-interface";
 import { randomBytes } from "crypto";
 
 export interface Milestone {
@@ -36,8 +37,8 @@ export interface MilestoneProgress {
   total_milestones: number;
   completed_milestones: number;
   budget_released_percentage: number;
-  current_milestone: Milestone | null;
-  all_milestones: Milestone[];
+  current_milestone: MilestoneRecord | null;
+  all_milestones: MilestoneRecord[];
 }
 
 export interface CreateMilestoneInput {
@@ -54,7 +55,7 @@ export interface CreateMilestoneInput {
 export async function createMilestones(
   listingId: string,
   milestones: CreateMilestoneInput[]
-): Promise<Milestone[]> {
+): Promise<MilestoneRecord[]> {
   // Validate total budget = 100%
   const totalBudget = milestones.reduce((sum, m) => sum + m.budget_percentage, 0);
   if (Math.abs(totalBudget - 100) > 0.01) {
@@ -68,7 +69,7 @@ export async function createMilestones(
     }
   }
 
-  const created: Milestone[] = [];
+  const created: MilestoneRecord[] = [];
   for (let i = 0; i < milestones.length; i++) {
     const m = milestones[i];
     const milestone = await db.createMilestone({
@@ -91,7 +92,7 @@ export async function createMilestones(
 export async function startMilestone(
   milestoneId: string,
   agentId: string
-): Promise<Milestone> {
+): Promise<MilestoneRecord> {
   const milestone = await db.getMilestone(milestoneId);
   if (!milestone) {
     throw new Error("Milestone not found");
@@ -128,7 +129,7 @@ export async function submitMilestone(
   milestoneId: string,
   agentId: string,
   artifacts: Array<{ type: string; url: string; description: string }>
-): Promise<MilestoneSubmission> {
+): Promise<MilestoneSubmissionRecord> {
   const milestone = await db.getMilestone(milestoneId);
   if (!milestone) {
     throw new Error("Milestone not found");
@@ -232,7 +233,7 @@ export async function rejectMilestone(
   milestoneId: string,
   posterId: string,
   feedback: string
-): Promise<Milestone> {
+): Promise<MilestoneRecord> {
   const milestone = await db.getMilestone(milestoneId);
   if (!milestone) {
     throw new Error("Milestone not found");
@@ -299,7 +300,7 @@ export async function getMilestoneProgress(
 /**
  * Get all milestones for a listing
  */
-export async function getMilestones(listingId: string): Promise<Milestone[]> {
+export async function getMilestones(listingId: string): Promise<MilestoneRecord[]> {
   const milestones = await db.getMilestones(listingId);
   return milestones.sort((a, b) => a.order_index - b.order_index);
 }
@@ -307,7 +308,7 @@ export async function getMilestones(listingId: string): Promise<Milestone[]> {
 /**
  * Get a single milestone
  */
-export async function getMilestone(milestoneId: string): Promise<Milestone | null> {
+export async function getMilestone(milestoneId: string): Promise<MilestoneRecord | null> {
   return await db.getMilestone(milestoneId);
 }
 
@@ -316,6 +317,6 @@ export async function getMilestone(milestoneId: string): Promise<Milestone | nul
  */
 export async function getMilestoneSubmissions(
   milestoneId: string
-): Promise<MilestoneSubmission[]> {
+): Promise<MilestoneSubmissionRecord[]> {
   return await db.getMilestoneSubmissions(milestoneId);
 }
