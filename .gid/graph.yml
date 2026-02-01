@@ -1,0 +1,451 @@
+meta:
+  version: '2.0'
+  domain: payment-infrastructure
+  schema:
+    relations:
+      code:
+        - implements
+        - depends_on
+        - calls
+        - reads
+        - writes
+        - tested_by
+        - defined_in
+      semantic:
+        - enables
+        - blocks
+        - requires
+        - precedes
+        - refines
+        - validates
+        - related_to
+        - decided_by
+    discovered: []
+
+nodes:
+  SaltdigAPI:
+    type: Component
+    layer: application
+    description: REST API layer for payment infrastructure (Next.js API routes)
+    status: active
+    priority: core
+
+  PaymentService:
+    type: Component
+    layer: application
+    description: Core payment processing service (escrow, settlements, transfers)
+    status: active
+    priority: core
+
+  SaltdigSDK:
+    type: Feature
+    layer: interface
+    description: TypeScript SDK for external platforms to integrate with Saltdig
+    status: planned
+    priority: core
+
+  Database:
+    type: Component
+    description: Database layer (Supabase Postgres or SQLite)
+    layer: infrastructure
+    status: active
+    priority: core
+
+  DatabaseInterface:
+    type: Component
+    description: TypeScript interface for all DB operations (db-interface.ts)
+    layer: infrastructure
+    status: active
+    priority: core
+
+  DatabaseFactory:
+    type: Component
+    description: Factory that selects SQLite or Supabase based on DATABASE_PROVIDER env
+    layer: infrastructure
+    status: active
+    priority: core
+
+  DatabaseSupabase:
+    type: Component
+    description: Supabase async implementation (db-supabase.ts)
+    layer: infrastructure
+    status: active
+    priority: core
+
+  Auth:
+    type: Component
+    description: API key authentication middleware
+    layer: application
+    status: active
+    priority: core
+
+  USDCWallet:
+    type: Feature
+    description: Base L2 wallet generation, encrypted key storage, USDC balance query
+    layer: infrastructure
+    status: active
+    priority: core
+
+  USDCEscrow:
+    type: Component
+    description: Solidity escrow contract on Base L2 — create/claim/submit/approve/dispute/auto-release
+    layer: infrastructure
+    status: active
+    priority: core
+
+  DualCurrencyMarket:
+    type: Feature
+    description: Market supports Salt (virtual) and USDC (real) listings, currency filter, USDC badges
+    layer: application
+    status: active
+    priority: core
+
+  USDCTransactionFlow:
+    type: Feature
+    description: 'Full USDC bounty flow: post→claim→submit→approve/dispute, 72h auto-release, 5% platform fee'
+    layer: application
+    status: active
+    priority: core
+
+  GIDBountyProtocol:
+    type: Feature
+    description: 'GID-powered bounty system — task graphs as machine-readable job specs for agent marketplace'
+    layer: application
+    status: active
+    priority: core
+
+  BountyNodeModel:
+    type: Component
+    description: 'Three-layer bounty node: Work Node (what to build) + Info Boundary (access scope) + Acceptance Harness (auto-verify)'
+    layer: application
+    status: active
+    priority: core
+
+  BountySubgraphExtract:
+    type: Component
+    description: 'Extract publishable bounty subgraphs from project GID graphs with access-scoped isolation'
+    layer: application
+    status: active
+    priority: core
+
+  BountySandbox:
+    type: Component
+    description: 'Agent execution sandbox — sparse checkout, path-scoped tokens, deny lists'
+    layer: infrastructure
+    status: active
+    priority: core
+
+  BountyCompetitionMode:
+    type: Feature
+    description: 'Kaggle-style competition: multiple agents submit solutions, best wins (evaluation harness)'
+    layer: application
+    status: active
+    priority: supporting
+
+  BountyMilestoneMode:
+    type: Feature
+    description: 'Upwork-style milestone payments: subgraph chunks with partial escrow releases'
+    layer: application
+    status: active
+    priority: supporting
+
+  SpecLoop:
+    type: Feature
+    description: 'Commitment deposits for spec/clarify phase: deposit→consume for spec reviews→freeze→convert remaining to budget credit'
+    layer: application
+    status: active
+    priority: core
+
+  ChangeOrder:
+    type: Feature
+    description: 'Post-freeze change requests with dependency impact analysis and delta cost escrow'
+    layer: application
+    status: active
+    priority: core
+
+  CoreRegistry:
+    type: Component
+    description: 'IP Core Registry - reusable composable modules with dependency resolution'
+    layer: application
+    status: active
+    priority: core
+
+  IPMarketplace:
+    type: Feature
+    description: 'IP Core Marketplace UI - browse, search, install cores by capabilities/provides/requires'
+    layer: interface
+    status: active
+    priority: core
+
+  NaclWallet:
+    type: Feature
+    description: NaCl virtual currency system — wallet, transfers, rich list
+    layer: application
+    status: active
+    priority: core
+
+  NaclWalletAPI:
+    type: Component
+    description: Wallet API endpoints (balance, transfer, rich-list)
+    layer: application
+    status: active
+    priority: core
+
+  NaclWalletUI:
+    type: Feature
+    description: /wallet page with NaCl rich list and vault display
+    layer: interface
+    status: active
+    priority: supporting
+
+  MarketAPI:
+    type: Component
+    description: Market bounty/escrow API (listings, offers, milestones, transactions)
+    layer: application
+    status: active
+    priority: core
+
+  MarketUI:
+    type: Feature
+    description: Market frontend page with listings, offers, transaction history
+    layer: interface
+    status: active
+    priority: supporting
+
+  MarketNaclSettlement:
+    type: Feature
+    description: NaCl settlement for market trades on offer acceptance
+    layer: application
+    status: active
+    priority: core
+
+  AgentToolMarket:
+    type: Feature
+    description: Tool marketplace where agents self-discover and install capabilities
+    layer: application
+    status: active
+    priority: supporting
+
+  PaymentBetting:
+    type: Feature
+    description: Payment infrastructure for betting/tipping (used by arena/stage)
+    layer: application
+    status: active
+    priority: supporting
+
+  EscrowCron:
+    type: Component
+    description: Cron job for 72h auto-release of approved escrows
+    layer: infrastructure
+    status: active
+    priority: core
+
+  RateLimiting:
+    type: Component
+    description: In-memory rate limiter for API endpoints
+    layer: application
+    status: active
+    priority: core
+
+  VercelDeploy:
+    type: Component
+    description: Vercel deployment + domain config (separate from SaltyHall)
+    layer: infrastructure
+    status: planned
+    priority: core
+
+  APIDocumentation:
+    type: Feature
+    description: API documentation page with endpoints, examples, Quick Start
+    layer: interface
+    status: planned
+    priority: supporting
+
+edges:
+  # API Layer
+  - from: SaltdigAPI
+    to: Auth
+    relation: depends_on
+  - from: SaltdigAPI
+    to: RateLimiting
+    relation: depends_on
+  - from: SaltdigAPI
+    to: PaymentService
+    relation: depends_on
+
+  # Payment Service
+  - from: PaymentService
+    to: USDCWallet
+    relation: depends_on
+  - from: PaymentService
+    to: USDCEscrow
+    relation: depends_on
+  - from: PaymentService
+    to: NaclWallet
+    relation: depends_on
+  - from: PaymentService
+    to: Database
+    relation: depends_on
+
+  # Bounty System
+  - from: GIDBountyProtocol
+    to: BountyNodeModel
+    relation: requires
+  - from: GIDBountyProtocol
+    to: BountySubgraphExtract
+    relation: requires
+  - from: GIDBountyProtocol
+    to: USDCEscrow
+    relation: depends_on
+  - from: GIDBountyProtocol
+    to: MarketAPI
+    relation: depends_on
+
+  - from: BountySubgraphExtract
+    to: BountyNodeModel
+    relation: depends_on
+  - from: BountySandbox
+    to: BountySubgraphExtract
+    relation: depends_on
+  - from: BountyCompetitionMode
+    to: GIDBountyProtocol
+    relation: refines
+  - from: BountyMilestoneMode
+    to: GIDBountyProtocol
+    relation: refines
+  - from: BountyMilestoneMode
+    to: USDCEscrow
+    relation: depends_on
+
+  # Transaction Flow
+  - from: USDCTransactionFlow
+    to: GIDBountyProtocol
+    relation: enables
+  - from: USDCTransactionFlow
+    to: USDCEscrow
+    relation: depends_on
+  - from: USDCTransactionFlow
+    to: MarketAPI
+    relation: depends_on
+
+  # Spec Loop & Change Orders
+  - from: SpecLoop
+    to: MarketAPI
+    relation: depends_on
+  - from: SpecLoop
+    to: USDCEscrow
+    relation: depends_on
+  - from: ChangeOrder
+    to: SpecLoop
+    relation: depends_on
+  - from: ChangeOrder
+    to: BountySubgraphExtract
+    relation: depends_on
+
+  # Core Registry & IP Marketplace
+  - from: IPMarketplace
+    to: CoreRegistry
+    relation: depends_on
+  - from: CoreRegistry
+    to: Database
+    relation: depends_on
+  - from: CoreRegistry
+    to: MarketAPI
+    relation: depends_on
+
+  # Wallet System
+  - from: NaclWalletAPI
+    to: NaclWallet
+    relation: depends_on
+  - from: NaclWalletAPI
+    to: Database
+    relation: depends_on
+  - from: NaclWalletAPI
+    to: Auth
+    relation: depends_on
+  - from: NaclWalletUI
+    to: NaclWalletAPI
+    relation: depends_on
+
+  - from: USDCWallet
+    to: Database
+    relation: depends_on
+  - from: USDCEscrow
+    to: USDCWallet
+    relation: depends_on
+
+  # Market API
+  - from: MarketAPI
+    to: Database
+    relation: depends_on
+  - from: MarketAPI
+    to: Auth
+    relation: depends_on
+  - from: MarketAPI
+    to: USDCEscrow
+    relation: depends_on
+  - from: MarketAPI
+    to: NaclWallet
+    relation: depends_on
+  - from: MarketUI
+    to: MarketAPI
+    relation: depends_on
+
+  # Settlement
+  - from: MarketNaclSettlement
+    to: NaclWallet
+    relation: depends_on
+  - from: MarketNaclSettlement
+    to: MarketAPI
+    relation: depends_on
+
+  # Tool Market
+  - from: AgentToolMarket
+    to: MarketAPI
+    relation: depends_on
+  - from: AgentToolMarket
+    to: Database
+    relation: depends_on
+
+  # Database Layer
+  - from: DatabaseFactory
+    to: DatabaseInterface
+    relation: implements
+  - from: DatabaseSupabase
+    to: DatabaseInterface
+    relation: implements
+  - from: Database
+    to: DatabaseFactory
+    relation: depends_on
+
+  # Infrastructure
+  - from: EscrowCron
+    to: USDCEscrow
+    relation: calls
+  - from: EscrowCron
+    to: Database
+    relation: depends_on
+
+  # Dual Currency
+  - from: DualCurrencyMarket
+    to: USDCWallet
+    relation: depends_on
+  - from: DualCurrencyMarket
+    to: NaclWallet
+    relation: depends_on
+  - from: DualCurrencyMarket
+    to: MarketAPI
+    relation: depends_on
+
+  # SDK (Future)
+  - from: SaltdigSDK
+    to: SaltdigAPI
+    relation: calls
+  - from: SaltdigSDK
+    to: Auth
+    relation: depends_on
+
+  # Documentation
+  - from: APIDocumentation
+    to: SaltdigAPI
+    relation: related_to
