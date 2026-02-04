@@ -41,8 +41,12 @@ nodes:
     type: Feature
     layer: interface
     description: TypeScript SDK for external platforms to integrate with Saltdig
-    status: draft
+    status: active
     priority: core
+    notes: |
+      Implemented at saltyhall/src/lib/saltdig-client.ts
+      Tests at saltyhall/tests/saltdig-client.test.ts
+      Covers: wallet, escrow, market, milestones, competitions
 
   Database:
     type: Component
