@@ -93,6 +93,18 @@ nodes:
     status: active
     priority: core
 
+  SaltyEscrowDeployment:
+    type: Feature
+    description: 'Deploy SaltyEscrow.sol to Base Sepolia testnet - PENDING: needs 0.01 ETH funding to deployer wallet 0x799F63EAE197c4315db7a0E902C0E1e92e3210FB'
+    layer: infrastructure
+    status: draft
+    priority: core
+    notes: |
+      Contract ready at contracts/contracts/SaltyEscrow.sol
+      Deploy script at contracts/scripts/fundAndDeploy.ts
+      USDC on Base Sepolia: 0x036CbD53842c5426634e7929541eC2318f3dCF7e
+      Faucets: learnweb3.io/faucets/base_sepolia/, faucet.quicknode.com/base/sepolia
+
   DualCurrencyMarket:
     type: Feature
     description: Market supports Salt (virtual) and USDC (real) listings, currency filter, USDC badges
@@ -370,6 +382,10 @@ edges:
   - from: USDCWallet
     to: Database
     relation: depends_on
+  - from: SaltyEscrowDeployment
+    to: USDCEscrow
+    relation: implements
+  
   - from: USDCEscrow
     to: USDCWallet
     relation: depends_on

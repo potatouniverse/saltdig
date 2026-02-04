@@ -1,106 +1,137 @@
 # SaltyEscrow Deployment Status
 
-## ✅ Completed Setup
+## ⏳ Status: Ready for Deployment (Pending Funding)
 
-### 1. Generated Deployer Wallet
-- **Address:** `0x799F63EAE197c4315db7a0E902C0E1e92e3210FB`
-- **Private Key:** Saved to `contracts/.env` (keep this secure!)
-- **Current Balance:** 0 ETH on Base Sepolia
+### Deployment Checklist
+- [x] Contract code: `contracts/SaltyEscrow.sol`
+- [x] Hardhat configuration: Base Sepolia network configured
+- [x] Deploy script: `scripts/fundAndDeploy.ts`
+- [x] Deployer wallet generated
+- [ ] **Wallet funded with testnet ETH** ← NEEDED
 
-### 2. Configured Hardhat
-- Updated `hardhat.config.ts` to load environment variables
-- Base Sepolia network configured with RPC: `https://sepolia.base.org`
-- Chain ID: 84532
+---
 
-### 3. Deployment Script Ready
-- `scripts/deploy.ts` is configured with:
-  - USDC address for Base Sepolia: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
-  - Auto-saves deployed address to `../.env.local`
+## Deployer Wallet
 
-### 4. Created Helper Scripts
-- `scripts/checkBalance.ts` - Check deployer wallet balance
-- Run: `npx hardhat run scripts/checkBalance.ts --network baseSepolia`
+| Property | Value |
+|----------|-------|
+| Address | `0x799F63EAE197c4315db7a0E902C0E1e92e3210FB` |
+| Network | Base Sepolia (chainId: 84532) |
+| Balance | **0 ETH** (needs funding) |
+| Private Key | Stored in `contracts/.env` |
 
-### 5. Compiled Contract
-- SaltyEscrow.sol compiled successfully
-- No compilation errors
+---
 
-## ⏳ Next Steps (Manual Action Required)
+## 🔑 Step 1: Fund the Wallet
 
-### Step 1: Fund the Deployer Wallet
-The deployer wallet needs testnet ETH to pay for gas. Get it from any of these faucets:
+The deployer wallet needs ~0.01 ETH to cover gas for deployment and verification.
 
-1. **Alchemy** (recommended): https://www.alchemy.com/faucets/base-sepolia
-2. **Chainlink**: https://faucets.chain.link/base-sepolia  
-3. **QuickNode**: https://faucet.quicknode.com/base/sepolia
-4. **thirdweb**: https://thirdweb.com/base-sepolia-testnet
+### Faucet Options
 
-**Wallet Address to Fund:** `0x799F63EAE197c4315db7a0E902C0E1e92e3210FB`
+1. **LearnWeb3 Faucet** (easiest, no requirements)
+   - URL: https://learnweb3.io/faucets/base_sepolia/
+   - Drip: 0.01 ETH
+   - Just paste the address and claim
 
-Most faucets give 0.05-0.1 ETH per request, which is plenty for deployment.
+2. **QuickNode Faucet** (12h cooldown)
+   - URL: https://faucet.quicknode.com/base/sepolia
+   - Drip: 0.01 ETH
 
-### Step 2: Verify Funding
-After requesting from a faucet (usually takes 1-2 minutes), run:
+3. **Chainlink Faucet** (requires GitHub)
+   - URL: https://faucets.chain.link/base-sepolia
+   - Drip: 0.1 ETH
+
+4. **Alchemy Faucet** (requires 0.001 mainnet ETH)
+   - URL: https://www.alchemy.com/faucets/base-sepolia
+   - Drip: 0.1 ETH
+
+**Address to fund:** `0x799F63EAE197c4315db7a0E902C0E1e92e3210FB`
+
+---
+
+## 🚀 Step 2: Deploy
+
+Once the wallet has ETH:
 
 ```bash
-cd /Users/potato/clawd/projects/saltyhall/contracts
-npx hardhat run scripts/checkBalance.ts --network baseSepolia
-```
-
-You should see a balance greater than 0.
-
-### Step 3: Deploy the Contract
-Once funded, deploy with:
-
-```bash
-cd /Users/potato/clawd/projects/saltyhall/contracts
-npx hardhat run scripts/deploy.ts --network baseSepolia
+cd /Users/potato/clawd/projects/saltdig/contracts
+npx hardhat run scripts/fundAndDeploy.ts --network baseSepolia
 ```
 
 Expected output:
 ```
-Deploying to network: base-sepolia (chainId: 84532)
+Network: base-sepolia (chainId: 84532)
+Deployer: 0x799F63EAE197c4315db7a0E902C0E1e92e3210FB
+Balance: 0.01 ETH
+
+✅ Wallet funded! Proceeding with deployment...
+
 Using USDC at: 0x036CbD53842c5426634e7929541eC2318f3dCF7e
-SaltyEscrow deployed to: 0x...
-Contract address saved to .env.local
+
+🎉 SaltyEscrow deployed to: 0x...
 ```
 
-The contract address will be automatically saved to `/Users/potato/clawd/projects/saltyhall/.env.local`
+---
 
-### Step 4: Verify on BaseScan (Optional)
+## ✅ Step 3: Verify on BaseScan
+
 After deployment, verify the contract source code:
 
 ```bash
 npx hardhat verify --network baseSepolia <DEPLOYED_ADDRESS> 0x036CbD53842c5426634e7929541eC2318f3dCF7e
 ```
 
-Replace `<DEPLOYED_ADDRESS>` with the address from Step 3's output.
+---
 
-## 📋 Quick Reference
+## Contract Details
 
-### Check Balance
-```bash
-npx hardhat run scripts/checkBalance.ts --network baseSepolia
-```
+### SaltyEscrow.sol
 
-### Deploy
-```bash
-npx hardhat run scripts/deploy.ts --network baseSepolia
-```
+A non-custodial escrow contract for USDC bounties on Base L2.
 
-### Verify
-```bash
-npx hardhat verify --network baseSepolia <ADDRESS> 0x036CbD53842c5426634e7929541eC2318f3dCF7e
-```
+**Key Features:**
+- 5% platform fee on successful bounties
+- 10% worker stake requirement
+- 72-hour auto-release after submission
+- Dispute resolution by admin
+- 1% cancellation fee for open bounties
 
-## 🔒 Security Notes
+**Target USDC (Base Sepolia):** `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
 
-- The private key in `contracts/.env` is for **testnet only**
-- Never use this wallet on mainnet
-- The `.env` file is gitignored by default
-- For production, use a hardware wallet or secure key management
+### Gas Estimates
+
+| Operation | Est. Gas | Est. Cost (Base Sepolia) |
+|-----------|----------|--------------------------|
+| Deploy | ~2,500,000 | < $0.01 |
+| createBounty | ~120,000 | < $0.001 |
+| claimBounty | ~80,000 | < $0.001 |
+| approveBounty | ~90,000 | < $0.001 |
 
 ---
 
-**Status:** Ready for deployment pending testnet ETH funding
-**Last Updated:** $(date)
+## Quick Commands
+
+```bash
+# Check wallet balance
+npx hardhat run scripts/checkBalance.ts --network baseSepolia
+
+# Deploy (if funded)
+npx hardhat run scripts/fundAndDeploy.ts --network baseSepolia
+
+# Verify contract
+npx hardhat verify --network baseSepolia <ADDRESS> 0x036CbD53842c5426634e7929541eC2318f3dCF7e
+```
+
+---
+
+## 🔒 Security Notes
+
+- Private key in `contracts/.env` is **testnet only**
+- Never use this wallet on mainnet
+- `.env` is gitignored
+- For production, use hardware wallet or multisig
+
+---
+
+**Last Updated:** 2026-02-04T04:50:00Z
+**Status:** Awaiting testnet ETH funding
