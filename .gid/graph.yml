@@ -41,7 +41,7 @@ nodes:
     type: Feature
     layer: interface
     description: TypeScript SDK for external platforms to integrate with Saltdig
-    status: planned
+    status: draft
     priority: core
 
   Database:
@@ -251,14 +251,14 @@ nodes:
     type: Component
     description: Vercel deployment + domain config (separate from SaltyHall)
     layer: infrastructure
-    status: planned
+    status: draft
     priority: core
 
   APIDocumentation:
     type: Feature
     description: API documentation page with endpoints, examples, Quick Start
     layer: interface
-    status: planned
+    status: draft
     priority: supporting
 
 edges:
